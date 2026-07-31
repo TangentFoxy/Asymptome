@@ -12,6 +12,10 @@ CLI tracker to prioritize your limited time by ELO ranking media.
   - [ ] allow a weighted priority based on remaining percentage or whatever.
 - [ ] Store items as an array instead of object, because that makes the JSON output more consistent -> smaller JSON commit differences.
 
+I think the opening UI should be to display the top 10 books in-progress (sort order customizable by user), where pressing a number key
+allows the user to immediately enter an updated progress. Additional alphabetic keys are an option to access other features. This way
+tracker use is near frictionless. (0 maps to 10)
+
 ## data structure of an item
 ```json
 {
