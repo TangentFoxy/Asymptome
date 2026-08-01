@@ -321,6 +321,52 @@ local get_books_by_preset = function(data, preset_name)
   return selected_books
 end
 
+local print_list = function(data, options)
+  local gsplit = function(s, delimiter)
+    local function escape_special_characters(s)
+      local special_characters = "[()%%.[^$%]*+%-?]"
+      if s == nil then return end
+      return (s:gsub(special_characters, "%%%1"))
+    end
+
+    delimiter = delimiter or ","
+    if s:sub(-#delimiter) ~= delimiter then s = s .. delimiter end
+    return s:gmatch("(.-)" .. escape_special_characters(delimiter))
+  end
+  local split = function(s, delimiter)
+    local result = {}
+    for item in gsplit(s, delimiter) do
+      result[#result + 1] = item
+    end
+    return result
+  end
+
+  options = split(options, " ")
+
+  local selected_books = {}
+  for i = 1, #data.books do
+    local book = data.books[i]
+    if filters[options[1]](book) then
+      selected_books[#selected_books + 1] = book
+    end
+  end
+  table.sort(selected_books, sort_orders[options[2]])
+
+  local limit = 10
+  if options[3] == "all" then
+    limit = #selected_books
+  end
+
+  print("")
+  for i = 1, limit do
+    local book = selected_books[i]
+    print(i .. ". " .. get_display_name(book))
+  end
+
+  print("  Press enter to continue.")
+  io.read("*line")
+end
+
 local launch = function(file_name)
   local data
   if path_exists(file_name) then
@@ -357,7 +403,7 @@ local main = function(data, selected_books)
   print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON")
   print("          file. Enter nothing to exit.")
   print("  Adding/Selecting: Title OR Title by Author OR \"Name (type)\" for other types.")
-  -- print("  Listing: preset [filter] [sort] (all)")
+  print("  Listing: list [filter] [sort] (all)")
   -- TODO implement elo ranking
 
   local input = io.read("*line")
@@ -369,6 +415,9 @@ local main = function(data, selected_books)
     update_book(selected_books[numerical])
   elseif input:sub(1, 1) == "i" then
     import_json(data, input:sub(3))
+  elseif input:find("list ") == 1 then
+    print_list(data, input:sub(6))
+    return true
   else -- assumed we are trying to add/select a book
     get_book(data, input)
     -- but that just returns a book, we need to DO something with it ??
@@ -378,6 +427,7 @@ local main = function(data, selected_books)
   end
 
   save_json(default_file, data) -- this assumes it is equivalent with how launch() is called
+  return true
 end
 
 local data, selected_books = launch(default_file) -- the file name doesn't make it to main :\
