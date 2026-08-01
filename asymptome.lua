@@ -41,19 +41,26 @@ local get_random_order = function(array)
 end
 
 local filters = {
+  all_books = function(book)
+    if book.hidden then return false end
+    return true
+  end,
   unread = function(book)
+    if book.hidden then return false end
     if book.progress == 0 then
       return true
     end
     return false
   end,
   read = function(book)
+    if book.hidden then return false end
     if book.progress == 1 then
       return true
     end
     return false
   end,
   in_progress = function(book)
+    if book.hidden then return false end
     if book.progress > 0 and book.progress < 1 then
       return true
     end
@@ -101,5 +108,11 @@ else
       maximum_change = 2.5,
     },
     total_pages = 0,
+    defaults = {
+      launch = {
+        filter = "in_progress",
+        sort = "fewest_pages_remaining",
+      },
+    },
   }
 end
