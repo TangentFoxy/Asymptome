@@ -3,6 +3,8 @@ local json = require "lib.dkjson"
 math.randomseed(os.time())
 
 local default_file = "books.json"
+local debug = function() end
+local debug = function(...) print(...) end
 
 local path_exists = function(path_name)
   local file = io.open(path_name, "r")
@@ -27,6 +29,7 @@ local save_json = function(file_name, data)
   file:write(json.encode(data, { indent = true, }))
   file:write("\n")
   file:close()
+  debug("Saved.")
 end
 
 local get_random_order = function(array)
@@ -105,6 +108,136 @@ sort_orders = {
   end,
 }
 
+local get_display_name = function(book)
+  local result = ""
+
+  if book.title then
+    result = book.title
+    if book.author then
+      result = result .. " by " .. book.author
+    end
+  elseif book.author then
+    result = book.author .. " (author)"
+  end
+
+  if book.series then
+    if #result > 0 then
+      result = result .. " (" .. book.series .. ")"
+    else
+      result = book.series .. " (series)"
+    end
+  end
+
+  if book.genre then
+    if #result > 0 then
+      result = result .. " (" .. book.genre .. ")"
+    else
+      result = book.genre .. " (genre)"
+    end
+  end
+
+  if book.pages then
+    result = result .. " ~" .. math.floor(book.progress * book.pages) .. "/" .. book.pages .. " pages read"
+  elseif book.progress > 0 and book.progress < 1 then
+    result = result .. " ~" .. math.floor(book.progress * 100) .. "% read"
+  end
+
+  return result
+end
+
+local update_progress_prompt = function(book)
+  if not book then
+    print("Invalid selection.")
+    return false
+  end
+
+  print("Enter a value between 0 and 1 to update progress:")
+  print("  " .. get_display_name(book))
+
+  local input = io.read("*line")
+  local numerical = tonumber(input)
+  if numerical >= 0 and numerical <= 1 then
+    book.progress = numerical
+    return true
+  end
+
+  -- saving is handled by a higher function on the stack
+end
+
+local get_book = function(data, input)
+  local title, author, series, genre
+  local i, j = input:find(" by ")
+  if i then
+    title = input:sub(1, i - 1)
+    author = input:sub(j + 1)
+    debug("get_book() Title by Author detected:", title, author)
+  else
+    local i = input:find(" (author)")
+    if i then
+      author = input:sub(1, i - 1)
+    end
+    local i = input:find(" (series)")
+      series = input:sub(1, i - 1)
+    if i then
+    end
+    local i = input:find(" (genre)")
+      genre = input:sub(1, i - 1)
+    if i then
+    end
+
+    if not (author or series or genre) then
+      title = input
+    end
+  end
+
+  local book
+  for i = 1, #data.books do
+    local current = data.books[i]
+    if title then
+      if current.title == title then
+        if author then
+          if current.author and current.author == author then
+            book = current
+            break
+          end
+        else
+          book = current
+          break
+        end
+      end
+    elseif author and current.author == author then
+      book = current
+      break
+    elseif series and current.series == series then
+      book = current
+      break
+    elseif genre and current.genre == genre then
+      book = current
+      break
+    end
+  end
+
+  if not book then
+    book = {
+      title = title,
+      author = author,
+      series = series,
+      genre = genre,
+      progress = 0,
+      priority = 0,
+    }
+    data.books[#data.books + 1] = book
+  end
+
+  -- this may or may not stay relevant to this placement
+  return update_progress_prompt(book)
+end
+
+local update_book = function(book)
+  -- currently just a wrapper, because I'm not sure if this will stay exactly consistent with that
+  return update_progress_prompt(book)
+end
+
 local import_json = function(data, file_name)
   import = load_json(file_name)
   if import.books then
@@ -170,49 +303,12 @@ local import_json = function(data, file_name)
     end
   end
 
-  save_json(default_file, data)
-end
-
-local get_display_name = function(book)
-  local result = ""
-
-  if book.title then
-    result = book.title
-    if book.author then
-      result = result .. " by " .. book.author
-    end
-  elseif book.author then
-    result = book.author .. " (author)"
-  end
-
-  if book.series then
-    if #result > 0 then
-      result = result .. " (" .. book.series .. ")"
-    else
-      result = book.series .. " (series)"
-    end
-  end
-
-  if book.genre then
-    if #result > 0 then
-      result = result .. " (" .. book.genre .. ")"
-    else
-      result = book.genre .. " (genre)"
-    end
-  end
-
-  if book.pages then
-    result = result .. " ~" .. math.floor(book.progress * book.pages) .. "/" .. book.pages .. " pages read"
-  elseif book.progress > 0 and book.progress < 1 then
-    result = result .. " ~" .. math.floor(book.progress * 100) .. "% read"
-  end
-
-  return result
+  -- we must rely on parent function to save
 end
 
 
 
-local select_books = function(preset_name)
+local get_books_by_preset = function(data, preset_name)
   local selected_books = {}
   for i = 1, #data.books do
     local book = data.books[i]
@@ -247,7 +343,7 @@ local launch = function(file_name)
     save_json(file_name, data)
   end
 
-  local selected_books = select_books("launch")
+  local selected_books = get_books_by_preset(data, "launch")
 
   return data, selected_books
 end
@@ -257,22 +353,32 @@ local main = function(data, selected_books)
     local book = selected_books[i]
     print("  " .. (i == 10 and "0" or i) .. ". " .. get_display_name(book))
   end
-  print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON file. Enter nothing to exit.")
+  print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON")
+  print("          file. Enter nothing to exit.")
   print("  Adding/Selecting: Title OR Title by Author OR \"Name (type)\" for other types.")
-  -- TODO define what can go in <book> and how it will be interpreted
-  -- TODO actually implement modifying progress and adding books
   -- TODO implement elo ranking
-  -- TODO type title to add or edit an extant book (this is better than the "a" command I wrote above)
 
   local input = io.read("*line")
-  if #input == 0 then os.exit(0) end
+  local numerical = tonumber(input)
 
-  if input:sub(1, 1) == "i" then
+  if #input == 0 then
+    os.exit(0)
+  elseif numerical and (numerical >= 0 and numerical <= 9) then
+    update_book(selected_books[numerical])
+  elseif input:sub(1, 1) == "i" then
     import_json(data, input:sub(3))
+  else -- assumed we are trying to add/select a book
+    get_book(data, input)
+    -- but that just returns a book, we need to DO something with it ??
+    -- right now, it demands a progress update;
+    -- TODO add mode selection to select and update vs select only mode that THEN asks what to do?
+    --       no? these are completely separate modes, there should be quick add, update progress, rank mode, add pages mode, etc
   end
+
+  save_json(default_file, data) -- this assumes it is equivalent with how launch() is called
 end
 
-local data, selected_books = launch(default_file)
+local data, selected_books = launch(default_file) -- the file name doesn't make it to main :\
 while true do
   main(data, selected_books)
 end

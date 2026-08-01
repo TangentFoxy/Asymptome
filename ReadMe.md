@@ -5,12 +5,14 @@ CLI tracker to prioritize your limited time by ELO ranking media.
 - [ ] Mark books read/unread/in-progress.
 - [x] Show top 10 / bottom 10. Show only in-progress or unread.
 - [ ] Rank only in-progress or unread.
-- [ ] Track books by title, author, and series. Default is to recognize "by" or "(series)" and automatically sort into relevant fields.
+- [x] Track books by title, author, and series. Default is to recognize "by" or "(series)" and automatically sort into relevant fields.
   - [x] But also almost nothing is actually *needed*.
 - [x] Store progress as a numerical value? (Unread = 0, read = 1, in-progress in-between? Too easy to forget how it works?)
 - [x] Store pages as an option,
   - [ ] allow a weighted priority based on remaining percentage or whatever.
 - [x] Store items as an array instead of object, because that makes the JSON output more consistent -> smaller JSON commit differences.
+- [ ] Re-implement ELO ranking.
+- [ ] Display filter/sort options to output lists. (Focus only on top 10 items?)
 
 ## Contributions
 
