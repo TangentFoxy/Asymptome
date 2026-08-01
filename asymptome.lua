@@ -103,98 +103,8 @@ sort_orders = {
   end,
 }
 
-local get_display_name = function(book)
-  local result = ""
-
-  if book.title then
-    result = book.title
-    if book.author then
-      result = result .. " by " .. book.author
-    end
-  elseif book.author then
-    result = book.author .. " (author)"
-  end
-
-  if book.series then
-    if #result > 0 then
-      result = result .. " (" .. book.series .. ")"
-    else
-      result = book.series .. " (series)"
-    end
-  end
-
-  if book.genre then
-    if #result > 0 then
-      result = result .. " (" .. book.genre .. ")"
-    else
-      result = book.genre .. " (genre)"
-    end
-  end
-
-  if book.pages then
-    result = result .. " ~" .. math.floor(book.progress * book.pages) .. "/" .. book.pages .. " pages read"
-  elseif book.progress > 0 and book.progress < 1 then
-    result = result .. " ~" .. math.floor(book.progress * 100) .. "% read"
-  end
-
-  return result
-end
-
-
-
--- TODO this procedural code should be split into functions where feasible
-
-local data
-if path_exists(default_file) then
-  data = load_json(default_file)
-  -- TODO verify data structure
-else
-  data = {
-    books = {},
-    elo = {
-      distance_constant = 5,
-      maximum_change = 2.5,
-    },
-    total_pages = 0,
-    defaults = {
-      launch = {
-        filter = "in_progress",
-        sort = "fewest_pages_remaining",
-      },
-    },
-  }
-  save_json(default_file, data)
-end
-
-
-
--- main menu
--- TODO should be a loop/function to return to
-
-local selected_books = {}
-for i = 1, #data.books do
-  local book = data.books[i]
-  if filters[data.defaults.launch.filter](book) then
-    selected_books[#selected_books + 1] = book
-  end
-end
-table.sort(selected_books, sort_orders[data.defaults.launch.sort])
-
-for i = 1, math.min(10, #selected_books) do
-  local book = selected_books[i]
-  print("  " .. (i == 10 and "0" or i) .. ". " .. get_display_name(book))
-end
-print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[a <book>] to add a book. [i <file>] to import from a JSON file.")
--- TODO define what can go in <book> and how it will be interpreted
--- TODO actually implement modifying progress and adding books
--- TODO implement elo ranking
--- TODO type title to add or edit an extant book (this is better than the "a" command I wrote above)
-
-local input = io.read("*line")
-
-if input:sub(1, 1) == "i" then
-  -- TODO this should all be broken out into a function
-  import = load_json(input:sub(3))
+local import_json = function(file_name)
+  import = load_json(file_name)
   if import.books then
 
     for i = 1, #import.books do
@@ -255,6 +165,104 @@ if input:sub(1, 1) == "i" then
   end
 
   save_json(default_file, data)
+end
 
-  -- TODO there should be a sort of main menu I am returned to
+local get_display_name = function(book)
+  local result = ""
+
+  if book.title then
+    result = book.title
+    if book.author then
+      result = result .. " by " .. book.author
+    end
+  elseif book.author then
+    result = book.author .. " (author)"
+  end
+
+  if book.series then
+    if #result > 0 then
+      result = result .. " (" .. book.series .. ")"
+    else
+      result = book.series .. " (series)"
+    end
+  end
+
+  if book.genre then
+    if #result > 0 then
+      result = result .. " (" .. book.genre .. ")"
+    else
+      result = book.genre .. " (genre)"
+    end
+  end
+
+  if book.pages then
+    result = result .. " ~" .. math.floor(book.progress * book.pages) .. "/" .. book.pages .. " pages read"
+  elseif book.progress > 0 and book.progress < 1 then
+    result = result .. " ~" .. math.floor(book.progress * 100) .. "% read"
+  end
+
+  return result
+end
+
+
+
+local data
+local launch = function()
+  if path_exists(default_file) then
+    data = load_json(default_file)
+    -- TODO verify data structure
+  else
+    data = {
+      books = {},
+      elo = {
+        distance_constant = 5,
+        maximum_change = 2.5,
+      },
+      total_pages = 0,
+      defaults = {
+        launch = {
+          filter = "in_progress",
+          sort = "fewest_pages_remaining",
+        },
+      },
+    }
+    save_json(default_file, data)
+  end
+
+  -- TODO this probably needs to be its own function
+  --       allowing selecting different presets/etc instead of just launch
+  local selected_books = {}
+  for i = 1, #data.books do
+    local book = data.books[i]
+    if filters[data.defaults.launch.filter](book) then
+      selected_books[#selected_books + 1] = book
+    end
+  end
+  table.sort(selected_books, sort_orders[data.defaults.launch.sort])
+
+  return selected_books
+end
+
+local main = function(selected_books)
+  for i = 1, math.min(10, #selected_books) do
+    local book = selected_books[i]
+    print("  " .. (i == 10 and "0" or i) .. ". " .. get_display_name(book))
+  end
+  print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON file. Control+C to exit.")
+  print("  Adding/Selecting: Title OR Title by Author OR \"Name (type)\" for other types.")
+  -- TODO define what can go in <book> and how it will be interpreted
+  -- TODO actually implement modifying progress and adding books
+  -- TODO implement elo ranking
+  -- TODO type title to add or edit an extant book (this is better than the "a" command I wrote above)
+
+  local input = io.read("*line")
+
+  if input:sub(1, 1) == "i" then
+    import_json(input:sub(3))
+  end
+end
+
+local selected_books = launch()
+while true do
+  main(selected_books)
 end
