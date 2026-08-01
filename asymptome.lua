@@ -4,7 +4,7 @@ math.randomseed(os.time())
 
 local default_file = "books.json"
 local debug = function() end
-local debug = function(...) print(...) end
+-- local debug = function(...) print(...) end
 
 local path_exists = function(path_name)
   local file = io.open(path_name, "r")
@@ -224,7 +224,7 @@ local get_book = function(data, input)
       series = series,
       genre = genre,
       progress = 0,
-      priority = 0,
+      priority = math.random(),
     }
     data.books[#data.books + 1] = book
   end
@@ -252,7 +252,7 @@ local import_json = function(data, file_name)
     for title, value in pairs(import) do
       local run = function()
         local book = { -- minimum required book data strucutre
-          priority = 0,
+          priority = math.random(),
           progress = 0,
         }
 
