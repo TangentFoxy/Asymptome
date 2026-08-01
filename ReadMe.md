@@ -19,12 +19,12 @@ tracker use is near frictionless. (0 maps to 10)
 ## data structure of an item
 ```json
 {
-  title = "Title",
-  author = "Author",
-  series = "Series",
-  pages = 100,
-  priority = 0,
-  progress = 0.5,
+  "title": "Title",
+  "author": "Author",
+  "series": "Series",
+  "pages": 100,
+  "priority": 0,
+  "progress": 0.5
 }
 ```
 
