@@ -103,7 +103,7 @@ sort_orders = {
   end,
 }
 
-local import_json = function(file_name)
+local import_json = function(data, file_name)
   import = load_json(file_name)
   if import.books then
 
@@ -135,13 +135,17 @@ local import_json = function(file_name)
         end
         local i = title:find(" %(genre%)")
         if i then
-          print("Skipping import of \"" .. title .. "\"")
-          return false
+          book.genre = title:sub(1, i - 1)
         end
 
-        if not (book.series or book.author) then
-          -- TODO detect " by " and split if needed
-          book.title = title
+        if not (book.series or book.author or book.genre) then
+          local i, j = title:find(" by ")
+          if i then
+            book.title = title:sub(1, i - 1)
+            book.author = title:sub(j + 1)
+          else
+            book.title = title
+          end
         end
 
         if type(value) == "number" then
@@ -206,10 +210,10 @@ end
 
 
 
-local data
-local launch = function()
-  if path_exists(default_file) then
-    data = load_json(default_file)
+local launch = function(file_name)
+  local data
+  if path_exists(file_name) then
+    data = load_json(file_name)
     -- TODO verify data structure
   else
     data = {
@@ -226,7 +230,7 @@ local launch = function()
         },
       },
     }
-    save_json(default_file, data)
+    save_json(file_name, data)
   end
 
   -- TODO this probably needs to be its own function
@@ -240,15 +244,15 @@ local launch = function()
   end
   table.sort(selected_books, sort_orders[data.defaults.launch.sort])
 
-  return selected_books
+  return data, selected_books
 end
 
-local main = function(selected_books)
+local main = function(data, selected_books)
   for i = 1, math.min(10, #selected_books) do
     local book = selected_books[i]
     print("  " .. (i == 10 and "0" or i) .. ". " .. get_display_name(book))
   end
-  print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON file. Control+C to exit.")
+  print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON file. Enter nothing to exit.")
   print("  Adding/Selecting: Title OR Title by Author OR \"Name (type)\" for other types.")
   -- TODO define what can go in <book> and how it will be interpreted
   -- TODO actually implement modifying progress and adding books
@@ -256,13 +260,14 @@ local main = function(selected_books)
   -- TODO type title to add or edit an extant book (this is better than the "a" command I wrote above)
 
   local input = io.read("*line")
+  if #input == 0 then os.exit(0) end
 
   if input:sub(1, 1) == "i" then
-    import_json(input:sub(3))
+    import_json(data, input:sub(3))
   end
 end
 
-local selected_books = launch()
+local data, selected_books = launch(default_file)
 while true do
-  main(selected_books)
+  main(data, selected_books)
 end
