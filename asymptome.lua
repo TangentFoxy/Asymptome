@@ -98,7 +98,8 @@ sort_orders = {
     end
     -- TODO figure out an elegant way to pass the required values here
     -- local average_page_count = data.total_pages / #data.books
-    local average_page_count = 200 -- an intentionally low default, intended to push them higher and make you pay attention
+    -- the previous default wasn't working for my desires, so I'm using a realistic default now
+    local average_page_count = 300
     local a = (A.pages or average_page_count) - (A.pages or average_page_count) * A.progress
     local b = (B.pages or average_page_count) - (B.pages or average_page_count) * B.progress
     return a > b
@@ -177,12 +178,12 @@ local get_book = function(data, input)
       author = input:sub(1, i - 1)
     end
     local i = input:find(" (series)")
-      series = input:sub(1, i - 1)
     if i then
+      series = input:sub(1, i - 1)
     end
     local i = input:find(" (genre)")
-      genre = input:sub(1, i - 1)
     if i then
+      genre = input:sub(1, i - 1)
     end
 
     if not (author or series or genre) then
@@ -356,6 +357,7 @@ local main = function(data, selected_books)
   print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON")
   print("          file. Enter nothing to exit.")
   print("  Adding/Selecting: Title OR Title by Author OR \"Name (type)\" for other types.")
+  -- print("  Listing: preset [filter] [sort] (all)")
   -- TODO implement elo ranking
 
   local input = io.read("*line")
