@@ -93,7 +93,9 @@ sort_orders = {
     if not (A.pages and B.pages) then -- if pages is unknown for both, fallback to percentage
       return A.progress < B.progress
     end
-    local average_page_count = data.total_pages / #data.books
+    -- TODO figure out an elegant way to pass the required values here
+    -- local average_page_count = data.total_pages / #data.books
+    local average_page_count = 200 -- an intentionally low default, intended to push them higher and make you pay attention
     local a = (A.pages or average_page_count) - (A.pages or average_page_count) * A.progress
     local b = (B.pages or average_page_count) - (B.pages or average_page_count) * B.progress
     return a > b
@@ -210,6 +212,18 @@ end
 
 
 
+local select_books = function(preset_name)
+  local selected_books = {}
+  for i = 1, #data.books do
+    local book = data.books[i]
+    if filters[data.defaults[preset_name].filter](book) then
+      selected_books[#selected_books + 1] = book
+    end
+  end
+  table.sort(selected_books, sort_orders[data.defaults[preset_name].sort])
+  return selected_books
+end
+
 local launch = function(file_name)
   local data
   if path_exists(file_name) then
@@ -233,16 +247,7 @@ local launch = function(file_name)
     save_json(file_name, data)
   end
 
-  -- TODO this probably needs to be its own function
-  --       allowing selecting different presets/etc instead of just launch
-  local selected_books = {}
-  for i = 1, #data.books do
-    local book = data.books[i]
-    if filters[data.defaults.launch.filter](book) then
-      selected_books[#selected_books + 1] = book
-    end
-  end
-  table.sort(selected_books, sort_orders[data.defaults.launch.sort])
+  local selected_books = select_books("launch")
 
   return data, selected_books
 end
