@@ -16,8 +16,8 @@ CLI tracker to prioritize your limited time by ELO ranking media.
 
 ## Contributions
 
-This repo is hosted at https://gitea.tangentfox.com/tangent/Asymtome and
-force-pushed to https://github.com/TangentFoxy/Asymtome when commits are made.
+This repo is hosted at https://gitea.tangentfox.com/tangent/Asymptome and
+force-pushed to https://github.com/TangentFoxy/Asymptome when commits are made.
 I accept pull requests and issues, but management of the code is handled there.
 
 Licensing? I don't care. Do whatever you want. IP rights are stupid.
