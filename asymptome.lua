@@ -96,7 +96,10 @@ sort_orders = {
     if not (A.pages and B.pages) then -- if pages is unknown for both, fallback to percentage
       return A.progress < B.progress
     end
-    local average_page_count = data.total_pages / #data.books
+    local average_page_count = data.total_pages / data.books_with_page_count
+    if not (average_page_count == average_page_count) then
+      average_page_count = 300 -- based on average novel length
+    end
     local a = (A.pages or average_page_count) - (A.pages or average_page_count) * A.progress
     local b = (B.pages or average_page_count) - (B.pages or average_page_count) * B.progress
     return a > b
@@ -266,6 +269,18 @@ local book_exists = function(data, book)
   return false
 end
 
+local recalculate_total_pages = function(data)
+  data.total_pages = 0
+  data.books_with_page_count = 0
+  for i = 1, #data.books do
+    local book = data.books[i]
+    if book.pages then
+      data.total_pages = data.total_pages + book.pages
+      data.books_with_page_count = data.books_with_page_count + 1
+    end
+  end
+end
+
 local import_json = function(data, file_name)
   import = load_json(file_name)
   if import.books then
@@ -319,6 +334,7 @@ local import_json = function(data, file_name)
     end
   end
 
+  recalculate_total_pages(data)
   -- we must rely on parent function to save
 end
 
@@ -394,6 +410,9 @@ local launch = function(file_name)
   if path_exists(file_name) then
     data = load_json(file_name)
     -- TODO verify data structure
+    if not data.books_with_page_count then
+      recalculate_total_pages(data)
+    end
   else
     data = {
       books = {},
@@ -402,6 +421,7 @@ local launch = function(file_name)
         maximum_change = 2.5,
       },
       total_pages = 0,
+      books_with_page_count = 0,
       defaults = {
         launch = {
           filter = "in_progress",
@@ -423,7 +443,7 @@ local main = function(data, selected_books)
     print("  " .. (i == 10 and "0" or i) .. ". " .. get_display_name(book))
   end
   print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON")
-  print("          file. Enter nothing to exit.")
+  print("          file. [recalculate pages] Enter nothing to exit.")
   print("  Adding/Selecting: Title OR Title by Author OR \"Name (type)\" for other types.")
   print("  Listing: list [filter] [sort] (all)")
   -- TODO implement elo ranking
@@ -440,7 +460,9 @@ local main = function(data, selected_books)
   elseif input:find("list ") == 1 then
     print_list(data, input:sub(6))
     return true
-  else -- assumed we are trying to add/select a book
+  elseif input:find("recalculate pages") == 1 then
+    recalculate_total_pages(data)
+  else -- assume we are trying to add/select a book
     get_book(data, input)
     -- but that just returns a book, we need to DO something with it ??
     -- right now, it demands a progress update;
