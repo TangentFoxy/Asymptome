@@ -92,20 +92,17 @@ sort_orders = {
   lowest_priority = function(A, B)
     return A.priority < B.priority
   end,
-  most_pages_remaining = function(A, B)
+  most_pages_remaining = function(A, B, data)
     if not (A.pages and B.pages) then -- if pages is unknown for both, fallback to percentage
       return A.progress < B.progress
     end
-    -- TODO figure out an elegant way to pass the required values here
-    -- local average_page_count = data.total_pages / #data.books
-    -- the previous default wasn't working for my desires, so I'm using a realistic default now
-    local average_page_count = 300
+    local average_page_count = data.total_pages / #data.books
     local a = (A.pages or average_page_count) - (A.pages or average_page_count) * A.progress
     local b = (B.pages or average_page_count) - (B.pages or average_page_count) * B.progress
     return a > b
   end,
-  fewest_pages_remaining = function(A, B)
-    return not sort_orders.most_pages_remaining(A, B)
+  fewest_pages_remaining = function(A, B, data)
+    return not sort_orders.most_pages_remaining(A, B, data)
   end,
 }
 
@@ -327,6 +324,13 @@ end
 
 
 
+local prep_sort_function = function(data, sort_function)
+  -- this allows me to pass data as a third argument for functions that use it
+  return function(A, B)
+    return sort_function(A, B, data)
+  end
+end
+
 local get_books_by_preset = function(data, preset_name)
   local selected_books = {}
   for i = 1, #data.books do
@@ -335,7 +339,7 @@ local get_books_by_preset = function(data, preset_name)
       selected_books[#selected_books + 1] = book
     end
   end
-  table.sort(selected_books, sort_orders[data.defaults[preset_name].sort])
+  table.sort(selected_books, prep_sort_function(sort_orders[data.defaults[preset_name].sort], data))
   return selected_books
 end
 
@@ -368,7 +372,7 @@ local print_list = function(data, options)
       selected_books[#selected_books + 1] = book
     end
   end
-  table.sort(selected_books, sort_orders[options[2]])
+  table.sort(selected_books, prep_sort_function(sort_orders[options[2]], data))
 
   local limit = 10
   if options[3] == "all" then
