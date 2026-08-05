@@ -165,6 +165,27 @@ local update_progress_prompt = function(book)
   -- saving is handled by a higher function on the stack
 end
 
+local detect_type = function(input)
+  local author, series, genre
+  local i = input:find(" %(.-series.-%)")
+  if i then
+    series = input:sub(1, i - 1)
+  end
+  local i = input:find(" %(trilogy%)")
+  if i then
+    series = input:sub(1, i - 1)
+  end
+  local i = input:find(" %(.-author%)")
+  if i then
+    author = input:sub(1, i - 1)
+  end
+  local i = input:find(" %(genre%)")
+  if i then
+    genre = input:sub(1, i - 1)
+  end
+  return author, series, genre
+end
+
 local get_book = function(data, input)
   local title, author, series, genre
   local i, j = input:find(" by ")
@@ -173,18 +194,7 @@ local get_book = function(data, input)
     author = input:sub(j + 1)
     debug("get_book() Title by Author detected:", title, author)
   else
-    local i = input:find(" (author)")
-    if i then
-      author = input:sub(1, i - 1)
-    end
-    local i = input:find(" (series)")
-    if i then
-      series = input:sub(1, i - 1)
-    end
-    local i = input:find(" (genre)")
-    if i then
-      genre = input:sub(1, i - 1)
-    end
+    author, series, genre = detect_type(input)
 
     if not (author or series or genre) then
       title = input
@@ -257,22 +267,7 @@ local import_json = function(data, file_name)
           progress = 0,
         }
 
-        local i = title:find(" %(.-series.-%)")
-        if i then
-          book.series = title:sub(1, i - 1)
-        end
-        local i = title:find(" %(trilogy%)")
-        if i then
-          book.series = title:sub(1, i - 1)
-        end
-        local i = title:find(" %(.-author%)")
-        if i then
-          book.author = title:sub(1, i - 1)
-        end
-        local i = title:find(" %(genre%)")
-        if i then
-          book.genre = title:sub(1, i - 1)
-        end
+        book.author, book.series, book.genre = detect_type(title)
 
         if not (book.series or book.author or book.genre) then
           local i, j = title:find(" by ")
