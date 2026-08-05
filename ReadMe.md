@@ -2,15 +2,16 @@
 CLI tracker to prioritize your limited time by ELO ranking media.
 
 ## Initial Ideas
-- [ ] Mark books read/unread/in-progress.
+- [x] Mark books read/unread/in-progress.
 - [x] Show top 10 / bottom 10. Show only in-progress or unread.
 - [ ] Rank only in-progress or unread.
 - [x] Track books by title, author, and series. Default is to recognize "by" or "(series)" and automatically sort into relevant fields.
   - [x] But also almost nothing is actually *needed*.
-- [x] Store progress as a numerical value? (Unread = 0, read = 1, in-progress in-between? Too easy to forget how it works?)
 - [x] Store pages as an option,
-  - [ ] allow a weighted priority based on remaining percentage or whatever.
+  - [x] allow a weighted priority based on remaining percentage or whatever.
 - [x] Store items as an array instead of object, because that makes the JSON output more consistent -> smaller JSON commit differences.
+      - [ ] I am not sure this actually helps much when EACH ITEM is still an
+            object. I need to make the JSON export sort its keys.
 - [ ] Re-implement ELO ranking.
 - [ ] Display filter/sort options to output lists. (Focus only on top 10 items?)
 
@@ -21,6 +22,12 @@ force-pushed to https://github.com/TangentFoxy/Asymptome when commits are made.
 I accept pull requests and issues, but management of the code is handled there.
 
 Licensing? I don't care. Do whatever you want. IP rights are stupid.
+
+## Ideas
+- [ ] When importing, allow user to make a choice when duplicates are detected
+      instead of rejecting them automatically.
+- [ ] When importing, a duplicate should still be checked for missing data, and
+      merge rather than ignore.
 
 ## Book Data Structure
 ```json

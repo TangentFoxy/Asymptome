@@ -249,14 +249,35 @@ local update_book = function(book)
   return update_progress_prompt(book)
 end
 
+local book_exists = function(data, book)
+  for i = 1, #data.books do
+    local current = data.books[i]
+    if not (book.title == current.title) then
+      break
+    end
+    if not (book.author == current.author) then
+      break
+    end
+    if not (book.series == current.series) then
+      break
+    end
+    if not (book.genre == current.genre) then
+      break
+    end
+    return current -- we return the object instead of true so it can be updated if desired
+  end
+  return false
+end
+
 local import_json = function(data, file_name)
   import = load_json(file_name)
   if import.books then
 
     for i = 1, #import.books do
-      data.books[#data.books + 1] = import.books[i]
-      -- TODO detect and ignore duplicates (would be better to provide user an option for what to do with duplicates)
-      --  default should accept highest progress of duplicates?
+      -- TODO allow updating metadata instead of just ignoring
+      if not book_exists(data, import.books[i]) then
+        data.books[#data.books + 1] = import.books[i]
+      end
     end
 
   else -- assume we are importing from decider.lua's format
@@ -292,8 +313,10 @@ local import_json = function(data, file_name)
           end
         end
 
-        -- TODO detect duplicates before adding them
-        data.books[#data.books + 1] = book
+        -- TODO allow updating metadata (this and the above need to be split into its own function)
+        if not book_exists(data, book) then
+          data.books[#data.books + 1] = book
+        end
       end
       run()
     end
