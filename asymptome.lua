@@ -20,16 +20,23 @@ local load_json = function(file_name)
   assert(file, error_message)
   local result = json.decode(file:read("*all"))
   file:close()
+
+  result._loaded_file_location = file_name
   return result
 end
 
-local save_json = function(file_name, data)
+local save_json = function(data)
+  local file_name = data._loaded_file_location
+  data._loaded_file_location = nil
+
   local file, error_message = io.open(file_name, "w")
   assert(file, error_message)
   file:write(json.encode(data, { indent = true, }))
   file:write("\n")
   file:close()
   debug("Saved.")
+
+  data._loaded_file_location = file_name
 end
 
 local get_random_order = function(array)
@@ -429,7 +436,7 @@ local launch = function(file_name)
         },
       },
     }
-    save_json(file_name, data)
+    save_json(data)
   end
 
   local selected_books = get_books_by_preset(data, "launch")
@@ -470,11 +477,11 @@ local main = function(data, selected_books)
     --       no? these are completely separate modes, there should be quick add, update progress, rank mode, add pages mode, etc
   end
 
-  save_json(default_file, data) -- this assumes it is equivalent with how launch() is called
+  save_json(data)
   return true
 end
 
-local data, selected_books = launch(default_file) -- the file name doesn't make it to main :\
+local data, selected_books = launch(default_file)
 while true do
   main(data, selected_books)
 end
