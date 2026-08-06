@@ -355,7 +355,7 @@ local get_books_by_preset = function(data, preset_name)
       selected_books[#selected_books + 1] = book
     end
   end
-  table.sort(selected_books, function(A, B) return sort_orders[data.defaults[preset_name].sort](A, B, data))
+  table.sort(selected_books, function(A, B) return sort_orders[data.defaults[preset_name].sort](A, B, data) end)
   return selected_books
 end
 
