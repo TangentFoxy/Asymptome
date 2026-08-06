@@ -412,6 +412,7 @@ local launch = function(file_name)
     -- TODO verify data structure
     if not data.books_with_page_count then
       recalculate_total_pages(data)
+      save_json(data)
     end
   else
     data = {
