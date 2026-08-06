@@ -347,13 +347,6 @@ end
 
 
 
-local prep_sort_function = function(data, sort_function)
-  -- this allows me to pass data as a third argument for functions that use it
-  return function(A, B)
-    return sort_function(A, B, data)
-  end
-end
-
 local get_books_by_preset = function(data, preset_name)
   local selected_books = {}
   for i = 1, #data.books do
@@ -362,7 +355,7 @@ local get_books_by_preset = function(data, preset_name)
       selected_books[#selected_books + 1] = book
     end
   end
-  table.sort(selected_books, prep_sort_function(sort_orders[data.defaults[preset_name].sort], data))
+  table.sort(selected_books, function(A, B) return sort_orders[data.defaults[preset_name].sort](A, B, data))
   return selected_books
 end
 
@@ -395,7 +388,7 @@ local print_list = function(data, options)
       selected_books[#selected_books + 1] = book
     end
   end
-  table.sort(selected_books, prep_sort_function(sort_orders[options[2]], data))
+  table.sort(selected_books, function(A, B) return sort_orders[options[2]](A, B, data) end)
 
   local limit = 10
   if options[3] == "all" then
