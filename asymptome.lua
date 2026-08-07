@@ -346,8 +346,16 @@ local launch = function(file_name)
   if path_exists(file_name) then
     data = load_json(file_name)
     -- TODO verify data structure
+    local data_modified = false
     if not data.books_with_page_count then
       recalculate_total_pages(data)
+      data_modified = true
+    end
+    if not data.defaults.launch.max_displayed then
+      data.defaults.launch.max_displayed = 10
+      data_modified = true
+    end
+    if data_modified then
       save_json(data)
     end
   else
@@ -375,11 +383,12 @@ local launch = function(file_name)
 end
 
 local main = function(data, selected_books)
-  for i = 1, math.min(10, #selected_books) do
+  local book_display_count = data.defaults.launch.max_displayed == 0 and #selected_books or data.defaults.launch.max_displayed
+  for i = 1, book_display_count do
     local book = selected_books[i]
-    print("  " .. (i == 10 and "0" or i) .. ". " .. get_display_name(book))
+    print("  " .. i .. ". " .. get_display_name(book))
   end
-  print("Commands: " .. (#selected_books > 0 and "[0-9] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON")
+  print("Commands: " .. (#selected_books > 0 and "[#] to modify a book's progress. " or "") .. "[i <file>] to import from a JSON")
   print("          file. [recalculate pages] Enter nothing to exit.")
   print("  Adding/Selecting: Title OR Title by Author OR \"Name (type)\" for other types.")
   print("  Listing: list [filter] [sort] (all)")
@@ -390,7 +399,7 @@ local main = function(data, selected_books)
 
   if #input == 0 then
     os.exit(0)
-  elseif numerical and (numerical >= 0 and numerical <= 9) then
+  elseif numerical then
     update_book(selected_books[numerical])
   elseif input:sub(1, 1) == "i" then
     import_json(data, input:sub(3))
