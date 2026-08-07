@@ -37,7 +37,7 @@ Licensing? I don't care. Do whatever you want. IP rights are stupid.
   "series": "Series",
   "genre": "Fiction",
   "pages": 100,
-  "hours": 1.5,
+  "hours": 1.30,
   "priority": 0,
   "progress": 0.5,
   "hidden": true
