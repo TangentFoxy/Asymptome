@@ -37,19 +37,23 @@ Licensing? I don't care. Do whatever you want. IP rights are stupid.
   "series": "Series",
   "genre": "Fiction",
   "pages": 100,
+  "hours": 1.5,
   "priority": 0,
   "progress": 0.5,
   "hidden": true
 }
 ```
 
-- `title`, `author`, `series`, `pages`, `genre`, and `hidden` are optional.
+- `title`, `author`, `series`, `pages`, `hours`, `genre`, and `hidden` are
+  optional.
 - At least one of `title`, `author`, `series`, or `genre` must be defined.
 - `priority` is the ELO ranking, initializing to `0`.
 - `progress` represents read/unread/in-progress status. `0` is unread, `1` is
   read, and anything in-between in a percentage of progress.
 - `hidden` is undefined or `true` to hide a book from ALL of the interface
   without deleting its data.
+- `hours` is hours.minutes rather than the fractional part being percentage of
+  an hour.
 
 Despite the script supporting otherwise, I highly recommend only using this for
 *specific book titles*. In my experience, using entries representing multiple

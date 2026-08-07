@@ -27,6 +27,17 @@ sort_orders = {
   fewest_pages_remaining = function(A, B, data)
     return not sort_orders.most_pages_remaining(A, B, data)
   end,
+  most_time_remaining = function(A, B)
+    if not (A.hours and B.hours) then -- fallback to percentage
+      return A.progress < B.progress
+    end
+    local a = A.hours - A.hours * A.progress
+    local b = B.hours - B.hours * B.progress
+    return a > b
+  end,
+  least_time_remaining = function(A, B)
+    return not sort_orders.most_time_remaining(A, B)
+  end,
 }
 
 return sort_orders

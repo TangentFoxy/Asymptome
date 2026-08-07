@@ -81,7 +81,10 @@ local get_display_name = function(book)
   end
 
   if book.pages then
-    result = result .. " ~" .. math.floor(book.progress * book.pages) .. "/" .. book.pages .. " pages read"
+    result = result .. " ~" .. math.floor(book.progress * book.pages) .. "/" .. book.pages .. " pages read (" .. math.floor(book.progress * 100) .. "%)"
+  elseif book.hours then
+    -- TODO correct for the fractional part being minutes instead of percent
+    result = result .. " ~" .. math.floor(book.progress * book.hours * 10) / 10 .. "/" .. book.hours .. " hours listened (" .. math.floor(book.progress * 100) .. "%)"
   elseif book.progress > 0 and book.progress < 1 then
     result = result .. " ~" .. math.floor(book.progress * 100) .. "% read"
   end

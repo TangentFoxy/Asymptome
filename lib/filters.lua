@@ -31,6 +31,13 @@ local filters = {
     end
     return true
   end,
+  audiobooks_only = function(book)
+    if book.hidden then return false end
+    if book.hours then
+      return true
+    end
+    return false
+  end,
 }
 
 return filters
